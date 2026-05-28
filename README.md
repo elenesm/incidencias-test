@@ -1,20 +1,22 @@
-# 🛠 Sistema de Gestión de Incidencias
+# Sistema de Gestión de Incidencias
 
-Monorepo con **API Node.js (Express + PostgreSQL)** y **App Flutter Mobile**.
-
-## 👥 Usuarios de prueba (seeders)
-
-| Rol        | Email                  | Contraseña     |
-|------------|------------------------|----------------|
-| SUPERVISOR | supervisor@test.com    | Admin123!      |
-| TÉCNICO    | tecnico1@test.com      | Tecnico123!    |
-| TÉCNICO    | tecnico2@test.com      | Tecnico123!    |
-| USUARIO    | usuario1@test.com      | Usuario123!    |
-| USUARIO    | usuario2@test.com      | Usuario123!    |
+Monorepo con **API REST (Node.js + Express + PostgreSQL)** y **App Flutter Mobile/Web**.
 
 ---
 
-## 🐳 Levantar con Docker (recomendado)
+## Usuarios de prueba
+
+| Rol        | Email               | Contraseña    |
+|------------|---------------------|---------------|
+| SUPERVISOR | supervisor@test.com | Admin123!     |
+| TÉCNICO    | tecnico1@test.com   | Tecnico123!   |
+| TÉCNICO    | tecnico2@test.com   | Tecnico123!   |
+| USUARIO    | usuario1@test.com   | Usuario123!   |
+| USUARIO    | usuario2@test.com   | Usuario123!   |
+
+---
+
+## Levantar con Docker (recomendado)
 
 ### Requisitos
 - Docker Desktop instalado y corriendo
@@ -22,36 +24,53 @@ Monorepo con **API Node.js (Express + PostgreSQL)** y **App Flutter Mobile**.
 ### Pasos
 
 ```bash
-# 1. Clonar / abrir el proyecto
+# 1. Clonar el proyecto
+git clone https://github.com/elenesm/incidencias-test.git
 cd incidencias-test
 
-# 2. Crear archivo de entorno (opcional, ya tiene defaults)
-cp backend/.env.example backend/.env
+# 2. Crear el archivo de entorno en la raíz (requerido por docker-compose)
+cp backend/.env.example .env
+# Editar .env con tus valores
+```
 
+El archivo `.env` en la **raíz** del proyecto debe tener:
+
+```env
+DB_USER=postgres
+DB_PASSWORD=tu_password_seguro
+DB_NAME=incidencias_db
+JWT_SECRET=genera_un_string_largo_aleatorio
+JWT_EXPIRES_IN=24h
+```
+
+> Para generar un JWT_SECRET seguro: `openssl rand -base64 64`
+
+```bash
 # 3. Levantar todo (DB + API + migraciones + seeders)
 docker-compose up --build
 ```
 
 La API estará disponible en: **http://localhost:3000**
 
-Para detener:
 ```bash
+# Detener los contenedores
 docker-compose down
-```
 
-Para limpiar la base de datos:
-```bash
+# Limpiar la base de datos (volumen)
 docker-compose down -v
 ```
 
+> Los seeders se ejecutan automáticamente al levantar. Gracias al `seederStorage: sequelize`,
+> no se re-ejecutan si los datos ya existen — puedes reiniciar el contenedor sin errores.
+
 ---
 
-## 💻 Levantar sin Docker (modo local)
+## Levantar sin Docker (modo local)
 
 ### Requisitos
 - Node.js 18+ (LTS)
 - PostgreSQL 14+ corriendo localmente
-- Flutter SDK estable
+- Flutter SDK estable (3.x)
 
 ### Back-end
 
@@ -61,17 +80,33 @@ cd backend
 # 1. Instalar dependencias
 npm install
 
-# 2. Crear y configurar variables de entorno
+# 2. Configurar variables de entorno
 cp .env.example .env
 # Editar .env con tus credenciales de PostgreSQL
+```
 
-# 3. Crear la base de datos en PostgreSQL (TablePlus, psql, etc.)
+El archivo `backend/.env` debe tener:
+
+```env
+NODE_ENV=development
+PORT=3000
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=tu_usuario_db
+DB_PASSWORD=tu_password_seguro
+DB_NAME=incidencias_db
+JWT_SECRET=genera_un_string_largo_aleatorio
+JWT_EXPIRES_IN=24h
+```
+
+```bash
+# 3. Crear la base de datos (TablePlus, psql, etc.)
 # CREATE DATABASE incidencias_db;
 
 # 4. Ejecutar migraciones
 npx sequelize-cli db:migrate
 
-# 5. Ejecutar seeders (datos iniciales)
+# 5. Ejecutar seeders
 npx sequelize-cli db:seed:all
 
 # 6. Levantar servidor de desarrollo
@@ -80,9 +115,15 @@ npm run dev
 
 API disponible en: **http://localhost:3000**
 
-Para deshacer migraciones:
+Scripts disponibles:
+
 ```bash
-npx sequelize-cli db:migrate:undo:all
+npm run dev          # Desarrollo con hot-reload (nodemon)
+npm start            # Producción
+npm run lint         # ESLint
+npm run format       # Prettier
+npm test             # Jest
+npm run migrate:undo # Deshacer todas las migraciones
 ```
 
 ### Front-end (Flutter)
@@ -93,23 +134,27 @@ cd frontend
 # 1. Instalar dependencias
 flutter pub get
 
-# 2. (Opcional) Verificar dispositivos disponibles
+# 2. Verificar dispositivos disponibles
 flutter devices
 
-# 3. Ejecutar en emulador o dispositivo
+# 3a. Ejecutar en emulador/dispositivo físico
 flutter run
+
+# 3b. Ejecutar en el navegador (modo web)
+flutter run -d chrome --web-port 7300
+
+# 3c. Ejecutar apuntando a una API en otro servidor
+flutter run --dart-define=API_BASE_URL=http://192.168.1.100:3000/api
 ```
 
-> Asegúrate de que la API esté corriendo antes de lanzar Flutter.
+> Por defecto la app apunta a `http://localhost:3000/api`.
+> Usa `--dart-define=API_BASE_URL=<url>` para cambiar el servidor sin tocar el código.
 
 ---
 
-## 🔒 Guards de rutas: Producción vs Smoke Tests
+## Guards de rutas: Producción vs Smoke Tests
 
-El archivo de configuración se encuentra en:
-```
-frontend/lib/config/app_config.dart
-```
+Archivo de configuración: `frontend/lib/config/app_config.dart`
 
 ```dart
 // true  = Modo Producción (requiere JWT válido)
@@ -117,88 +162,128 @@ frontend/lib/config/app_config.dart
 const bool ENABLE_ROUTE_GUARDS = true;
 ```
 
-### Activar modo Smoke Tests
-Cambia el valor a `false`:
-```dart
-const bool ENABLE_ROUTE_GUARDS = false;
+| Modo | Comportamiento |
+|---|---|
+| `true` (producción) | Sin token → redirige a Login. Rol incorrecto → pantalla de acceso denegado. |
+| `false` (smoke tests) | Navegación libre, las llamadas a la API pueden devolver 401 y es aceptable. |
+
+---
+
+## Endpoints de la API
+
+Todas las rutas bajo `/api`. Las rutas protegidas requieren header:
+```
+Authorization: Bearer <token>
 ```
 
-Esto permite navegar todas las pantallas sin autenticación para revisar layouts y flujos visuales.
-
-### Volver a Producción
-Cambia el valor a `true` (valor por defecto y recomendado en producción).
-
----
-
-## 📡 Endpoints de la API
-
 ### Auth
-| Método | Ruta               | Descripción                    |
-|--------|--------------------|--------------------------------|
-| POST   | /api/auth/login    | Login y obtención de JWT       |
 
-### Usuario
-| Método | Ruta                                        | Descripción                        |
-|--------|---------------------------------------------|------------------------------------|
-| POST   | /api/usuario/incidencias                    | Crear incidencia                   |
-| GET    | /api/usuario/incidencias                    | Listar mis incidencias             |
-| GET    | /api/usuario/incidencias/:id               | Detalle + bitácora                 |
-| POST   | /api/usuario/incidencias/:id/comentarios   | Agregar comentario                 |
+| Método | Ruta              | Auth | Descripción              |
+|--------|-------------------|------|--------------------------|
+| POST   | /api/auth/login   | No   | Login — devuelve JWT     |
+| POST   | /api/auth/logout  | Sí   | Logout (invalida sesión) |
 
-### Técnico
-| Método | Ruta                                        | Descripción                        |
-|--------|---------------------------------------------|------------------------------------|
-| GET    | /api/tecnico/incidencias                    | Listar asignadas                   |
-| GET    | /api/tecnico/incidencias/:id               | Detalle + bitácora                 |
-| PATCH  | /api/tecnico/incidencias/:id               | Actualizar estatus/comentario      |
-| POST   | /api/tecnico/incidencias/:id/comentarios   | Agregar comentario técnico         |
+### Usuario (`rol: USUARIO`)
 
-### Supervisor
-| Método | Ruta                                        | Descripción                        |
-|--------|---------------------------------------------|------------------------------------|
-| GET    | /api/admin/incidencias                      | Tablero global con filtros         |
-| POST   | /api/admin/incidencias/:id/asignar          | Asignar técnico                    |
-| PATCH  | /api/admin/incidencias/:id                  | Actualizar campos                  |
-| DELETE | /api/admin/incidencias/:id                  | Inactivar (soft delete)            |
-| GET    | /api/admin/reportes                         | Reportes métricos                  |
+| Método | Ruta                                      | Descripción                          |
+|--------|-------------------------------------------|--------------------------------------|
+| POST   | /api/usuario/incidencias                  | Crear incidencia                     |
+| GET    | /api/usuario/incidencias                  | Listar mis incidencias (`?estatus=`) |
+| GET    | /api/usuario/incidencias/:id              | Detalle + bitácora completa          |
+| POST   | /api/usuario/incidencias/:id/comentarios  | Agregar comentario                   |
+
+### Técnico (`rol: TECNICO`)
+
+| Método | Ruta                                      | Descripción                          |
+|--------|-------------------------------------------|--------------------------------------|
+| GET    | /api/tecnico/incidencias                  | Listar incidencias asignadas         |
+| GET    | /api/tecnico/incidencias/:id              | Detalle + bitácora                   |
+| PATCH  | /api/tecnico/incidencias/:id              | Actualizar estatus y/o comentario    |
+| POST   | /api/tecnico/incidencias/:id/comentarios  | Agregar nota técnica                 |
+
+### Supervisor (`rol: SUPERVISOR`)
+
+| Método | Ruta                                      | Descripción                                          |
+|--------|-------------------------------------------|------------------------------------------------------|
+| GET    | /api/admin/incidencias                    | Tablero global (`?estatus` `?prioridad` `?tecnico_id` `?desde` `?hasta`) |
+| POST   | /api/admin/incidencias/:id/asignar        | Asignar / reasignar técnico                          |
+| PATCH  | /api/admin/incidencias/:id                | Actualizar campos (prioridad, estatus, etc.)         |
+| DELETE | /api/admin/incidencias/:id                | Inactivar incidencia (soft delete)                   |
+| GET    | /api/admin/reportes                       | Métricas por estatus, prioridad y técnico            |
+| GET    | /api/admin/tecnicos                       | Listar técnicos disponibles para asignación          |
+
+### Utilitario
+
+| Método | Ruta        | Descripción       |
+|--------|-------------|-------------------|
+| GET    | /api/health | Estado de la API  |
 
 ---
 
-## 🗄 Conexión a PostgreSQL (TablePlus)
+## Seguridad
 
-| Campo    | Valor              |
-|----------|--------------------|
-| Host     | localhost          |
-| Puerto   | 5432               |
-| Base de datos | incidencias_db |
-| Usuario  | postgres           |
-| Contraseña | postgres123      |
+- Los archivos `.env` están en `.gitignore` y **nunca se suben al repositorio**.
+- Usar `backend/.env.example` como plantilla; contiene solo placeholders, sin credenciales reales.
+- El `docker-compose.yml` no tiene valores hardcodeados — requiere el `.env` en la raíz.
+- JWT validado en cada request a rutas protegidas mediante middleware.
+- Control de roles: cada módulo (`/usuario`, `/tecnico`, `/admin`) valida el rol del token.
+- Respuestas 401 en Flutter disparan logout automático y redirigen a Login.
+
+### Conexión a PostgreSQL (TablePlus u otro cliente)
+
+Usar los valores del archivo `.env` que configuraste:
+
+| Campo         | Valor del `.env`   |
+|---------------|--------------------|
+| Host          | localhost          |
+| Puerto        | 5432               |
+| Base de datos | `DB_NAME`          |
+| Usuario       | `DB_USER`          |
+| Contraseña    | `DB_PASSWORD`      |
 
 ---
 
-## 🏗 Estructura del proyecto
+## Arquitectura
 
 ```
 incidencias-test/
 ├── backend/
 │   ├── src/
-│   │   ├── config/        # Sequelize + variables de entorno
-│   │   ├── models/        # Entidades (Usuario, Incidencia, Log, Asignacion)
-│   │   ├── controllers/   # Lógica de negocio por módulo
-│   │   ├── routes/        # Endpoints + validaciones
-│   │   ├── middlewares/   # Auth JWT, roles, validación, errores
-│   │   ├── migrations/    # Migraciones Sequelize
-│   │   └── seeders/       # Datos iniciales
+│   │   ├── config/        # database.js (Sequelize config + seederStorage)
+│   │   ├── models/        # Usuario, Incidencia, IncidenciaLog, Asignacion
+│   │   ├── controllers/   # Lógica de negocio separada por rol
+│   │   ├── routes/        # Endpoints + validaciones (express-validator)
+│   │   ├── middlewares/   # auth (JWT), role (RBAC), validate, error
+│   │   ├── migrations/    # Esquema de base de datos versionado
+│   │   └── seeders/       # Datos iniciales (5 usuarios, 5 incidencias, logs)
+│   ├── .eslintrc.json
+│   ├── .prettierrc
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
 │   └── lib/
-│       ├── config/        # Rutas y configuración global (guards)
-│       ├── models/        # Modelos Dart
-│       ├── services/      # AuthService, ApiService, IncidenciaService
-│       ├── screens/       # Pantallas por rol (auth/usuario/tecnico/admin)
-│       ├── widgets/       # Componentes reutilizables
-│       └── utils/         # Colores, guards
+│       ├── config/        # app_config.dart (ENABLE_ROUTE_GUARDS, BASE_URL), routes.dart
+│       ├── models/        # IncidenciaModel, UsuarioModel, LogModel, UsuarioRef
+│       ├── services/      # AuthService, ApiService (401 interceptor), IncidenciaService
+│       ├── screens/       # auth/ usuario/ tecnico/ admin/
+│       ├── widgets/       # EstatusChip, PrioridadChip, LoadingButton
+│       └── main.dart      # onGenerateRoute, guards, navigatorKey global
 ├── docker-compose.yml
+├── postman_collection.json
 └── README.md
 ```
+
+### Stack
+
+| Capa       | Tecnología                                  |
+|------------|---------------------------------------------|
+| Runtime    | Node.js 18 LTS                              |
+| Framework  | Express 4                                   |
+| Base datos | PostgreSQL 15                               |
+| ORM        | Sequelize 6 (migraciones + seeders)         |
+| Auth       | JWT (jsonwebtoken) + bcryptjs               |
+| Seguridad  | helmet, cors, express-validator             |
+| Mobile/Web | Flutter 3 + Dart 3                          |
+| HTTP       | package:http                                |
+| Sesión     | shared_preferences (JWT local)              |
+| DevOps     | Docker + Docker Compose                     |
