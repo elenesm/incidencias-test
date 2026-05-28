@@ -1,0 +1,59 @@
+{
+  "info": {
+    "name": "Gestión de Incidencias API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api" },
+    { "key": "token_supervisor", "value": "" },
+    { "key": "token_tecnico", "value": "" },
+    { "key": "token_usuario", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Login Supervisor", "request": { "method": "POST", "url": "{{base_url}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"supervisor@test.com\",\"password\":\"Admin123!\"}" } } },
+        { "name": "Login Tecnico", "request": { "method": "POST", "url": "{{base_url}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"tecnico1@test.com\",\"password\":\"Tecnico123!\"}" } } },
+        { "name": "Login Usuario", "request": { "method": "POST", "url": "{{base_url}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"usuario1@test.com\",\"password\":\"Usuario123!\"}" } } }
+      ]
+    },
+    {
+      "name": "Usuario",
+      "item": [
+        { "name": "Crear Incidencia", "request": { "method": "POST", "url": "{{base_url}}/usuario/incidencias", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_usuario}}"}], "body": { "mode": "raw", "raw": "{\"titulo\":\"Falla en sistema\",\"descripcion\":\"El sistema no responde\",\"categoria\":\"Software\",\"prioridad\":\"ALTA\"}" } } },
+        { "name": "Listar Mis Incidencias", "request": { "method": "GET", "url": "{{base_url}}/usuario/incidencias", "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}] } },
+        { "name": "Listar Filtradas por Estatus", "request": { "method": "GET", "url": { "raw": "{{base_url}}/usuario/incidencias?estatus=ABIERTA", "query": [{"key":"estatus","value":"ABIERTA"}] }, "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}] } },
+        { "name": "Detalle Incidencia", "request": { "method": "GET", "url": "{{base_url}}/usuario/incidencias/1", "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}] } },
+        { "name": "Agregar Comentario", "request": { "method": "POST", "url": "{{base_url}}/usuario/incidencias/1/comentarios", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_usuario}}"}], "body": { "mode": "raw", "raw": "{\"mensaje\":\"Sigue fallando después del reinicio.\"}" } } }
+      ]
+    },
+    {
+      "name": "Técnico",
+      "item": [
+        { "name": "Listar Asignadas", "request": { "method": "GET", "url": "{{base_url}}/tecnico/incidencias", "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}] } },
+        { "name": "Detalle Asignada", "request": { "method": "GET", "url": "{{base_url}}/tecnico/incidencias/1", "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}] } },
+        { "name": "Actualizar Estatus", "request": { "method": "PATCH", "url": "{{base_url}}/tecnico/incidencias/1", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}], "body": { "mode": "raw", "raw": "{\"estatus\":\"RESUELTA\",\"comentario\":\"Problema resuelto reinstalando el servicio.\"}" } } },
+        { "name": "Agregar Comentario Técnico", "request": { "method": "POST", "url": "{{base_url}}/tecnico/incidencias/1/comentarios", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}], "body": { "mode": "raw", "raw": "{\"mensaje\":\"Revisando logs del servidor.\"}" } } }
+      ]
+    },
+    {
+      "name": "Supervisor (Admin)",
+      "item": [
+        { "name": "Listado Global", "request": { "method": "GET", "url": "{{base_url}}/admin/incidencias", "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
+        { "name": "Filtrar por Estatus y Prioridad", "request": { "method": "GET", "url": { "raw": "{{base_url}}/admin/incidencias?estatus=ABIERTA&prioridad=ALTA", "query": [{"key":"estatus","value":"ABIERTA"},{"key":"prioridad","value":"ALTA"}] }, "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
+        { "name": "Asignar Técnico", "request": { "method": "POST", "url": "{{base_url}}/admin/incidencias/2/asignar", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}], "body": { "mode": "raw", "raw": "{\"tecnico_id\":2}" } } },
+        { "name": "Actualizar Campos (PATCH)", "request": { "method": "PATCH", "url": "{{base_url}}/admin/incidencias/2", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}], "body": { "mode": "raw", "raw": "{\"prioridad\":\"CRITICA\",\"estatus\":\"EN_PROCESO\"}" } } },
+        { "name": "Inactivar (Soft Delete)", "request": { "method": "DELETE", "url": "{{base_url}}/admin/incidencias/5", "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
+        { "name": "Reportes Generales", "request": { "method": "GET", "url": "{{base_url}}/admin/reportes", "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
+        { "name": "Reportes por Rango de Fechas", "request": { "method": "GET", "url": { "raw": "{{base_url}}/admin/reportes?desde=2024-01-01&hasta=2024-12-31", "query": [{"key":"desde","value":"2024-01-01"},{"key":"hasta","value":"2024-12-31"}] }, "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        { "name": "API Health", "request": { "method": "GET", "url": "{{base_url}}/health" } }
+      ]
+    }
+  ]
+}
