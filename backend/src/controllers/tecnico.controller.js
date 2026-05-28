@@ -21,7 +21,7 @@ const detalleAsignada = async (req, res, next) => {
       include: [
         { model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'email'] },
         { model: IncidenciaLog, as: 'logs',
-          include: [{ model: Usuario, as: 'autor', attributes: ['id', 'nombre', 'rol'] }] },
+          include: [{ model: Usuario, as: 'autor', attributes: ['id', 'nombre', 'email', 'rol'] }] },
       ],
     });
     if (!incidencia) return res.status(404).json({ ok: false, message: 'Incidencia no encontrada.' });

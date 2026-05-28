@@ -11,6 +11,7 @@ const router = Router();
 router.use(auth, role('SUPERVISOR'));
 
 router.get('/incidencias', ctrl.listarTodas);
+router.get('/tecnicos', ctrl.listarTecnicos);
 router.post(
   '/incidencias/:id/asignar',
   [param('id').isInt(), body('tecnico_id').isInt().withMessage('tecnico_id requerido.'), validate],

@@ -86,6 +86,15 @@ class IncidenciaService {
     if (res.statusCode != 200) throw Exception(jsonDecode(res.body)['message'] ?? 'Error.');
   }
 
+  Future<List<UsuarioRef>> getTecnicos() async {
+    final res = await _api.get('/admin/tecnicos');
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return (data['tecnicos'] as List).map((e) => UsuarioRef.fromJson(e)).toList();
+    }
+    throw Exception(jsonDecode(res.body)['message'] ?? 'Error al cargar técnicos.');
+  }
+
   Future<void> inactivar(int id) async {
     final res = await _api.delete('/admin/incidencias/$id');
     if (res.statusCode != 200) throw Exception(jsonDecode(res.body)['message'] ?? 'Error.');

@@ -132,4 +132,15 @@ const reportes = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { listarTodas, asignarTecnico, actualizarCampos, inactivarIncidencia, reportes };
+const listarTecnicos = async (req, res, next) => {
+  try {
+    const tecnicos = await Usuario.findAll({
+      where: { rol: 'TECNICO' },
+      attributes: ['id', 'nombre', 'email'],
+      order: [['nombre', 'ASC']],
+    });
+    return res.json({ ok: true, tecnicos });
+  } catch (err) { next(err); }
+};
+
+module.exports = { listarTodas, asignarTecnico, actualizarCampos, inactivarIncidencia, reportes, listarTecnicos };

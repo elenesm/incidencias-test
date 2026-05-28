@@ -44,9 +44,9 @@ class IncidenciaModel {
 class UsuarioRef {
   final int id;
   final String nombre;
-  final String email;
+  final String? email;
 
-  UsuarioRef({required this.id, required this.nombre, required this.email});
+  UsuarioRef({required this.id, required this.nombre, this.email});
   factory UsuarioRef.fromJson(Map<String, dynamic> json) =>
       UsuarioRef(id: json['id'], nombre: json['nombre'], email: json['email']);
 }

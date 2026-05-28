@@ -13,8 +13,9 @@ class AdminDetalleScreen extends StatefulWidget {
 
 class _AdminDetalleState extends State<AdminDetalleScreen> {
   final _service = IncidenciaService();
-  final _tecnicoIdCtrl = TextEditingController();
   IncidenciaModel? _inc;
+  List<UsuarioRef> _tecnicos = [];
+  UsuarioRef? _tecnicoSeleccionado;
   bool _loading = true;
   bool _saving = false;
   String? _nuevoEstatus;
@@ -26,20 +27,36 @@ class _AdminDetalleState extends State<AdminDetalleScreen> {
   Future<void> _cargar() async {
     setState(() => _loading = true);
     try {
-      // Usamos endpoint admin genérico via lista con filtro
-      final lista = await _service.getTodasIncidencias();
+      final results = await Future.wait([
+        _service.getTodasIncidencias(),
+        _service.getTecnicos(),
+      ]);
+      final lista = results[0] as List<IncidenciaModel>;
+      final tecnicos = results[1] as List<UsuarioRef>;
       final inc = lista.firstWhere((i) => i.id == widget.incidenciaId);
-      setState(() { _inc = inc; _nuevoEstatus = inc.estatus; });
+      setState(() {
+        _inc = inc;
+        _nuevoEstatus = inc.estatus;
+        _tecnicos = tecnicos;
+        _tecnicoSeleccionado = inc.tecnicoId != null
+            ? tecnicos.where((t) => t.id == inc.tecnicoId).firstOrNull
+            : null;
+      });
     } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red)); }
     finally { if (mounted) setState(() => _loading = false); }
   }
 
   Future<void> _asignar() async {
-    final id = int.tryParse(_tecnicoIdCtrl.text.trim());
-    if (id == null) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un ID de técnico válido.'), backgroundColor: Colors.red)); return; }
+    if (_tecnicoSeleccionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona un técnico.'), backgroundColor: Colors.red));
+      return;
+    }
     setState(() => _saving = true);
-    try { await _service.asignarTecnico(widget.incidenciaId, id); _tecnicoIdCtrl.clear(); _cargar(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Técnico asignado.'), backgroundColor: Colors.green)); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red)); }
+    try {
+      await _service.asignarTecnico(widget.incidenciaId, _tecnicoSeleccionado!.id);
+      _cargar();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Técnico asignado.'), backgroundColor: Colors.green));
+    } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red)); }
     finally { if (mounted) setState(() => _saving = false); }
   }
 
@@ -74,13 +91,19 @@ class _AdminDetalleState extends State<AdminDetalleScreen> {
         ]))),
         const SizedBox(height: 12),
         Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Asignar técnico (por ID)', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text('Asignar técnico', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Row(children: [
-            Expanded(child: TextField(controller: _tecnicoIdCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ID del técnico', border: OutlineInputBorder()))),
-            const SizedBox(width: 12),
-            ElevatedButton(onPressed: _saving ? null : _asignar, child: const Text('Asignar')),
-          ]),
+          DropdownButtonFormField<UsuarioRef>(
+            value: _tecnicoSeleccionado,
+            decoration: const InputDecoration(labelText: 'Seleccionar técnico', border: OutlineInputBorder()),
+            items: _tecnicos.map((t) => DropdownMenuItem(
+              value: t,
+              child: Text('${t.nombre} — ${t.email ?? ''}'),
+            )).toList(),
+            onChanged: (v) => setState(() => _tecnicoSeleccionado = v),
+          ),
+          const SizedBox(height: 8),
+          LoadingButton(loading: _saving, label: 'Asignar', onPressed: _asignar),
         ]))),
         const SizedBox(height: 12),
         Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

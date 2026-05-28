@@ -40,7 +40,7 @@ const detalleIncidencia = async (req, res, next) => {
       include: [
         { model: Usuario, as: 'tecnico', attributes: ['id', 'nombre', 'email'] },
         { model: IncidenciaLog, as: 'logs',
-          include: [{ model: Usuario, as: 'autor', attributes: ['id', 'nombre', 'rol'] }],
+          include: [{ model: Usuario, as: 'autor', attributes: ['id', 'nombre', 'email', 'rol'] }],
           order: [['created_at', 'ASC']] },
       ],
     });
