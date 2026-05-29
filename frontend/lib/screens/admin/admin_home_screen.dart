@@ -18,7 +18,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   bool _loading = true;
   String? _filtroEstatus;
   String? _filtroPrioridad;
-  final List<String> _estatuses = ['TODAS', 'ABIERTA', 'EN_PROCESO', 'EN_ESPERA', 'RESUELTA', 'CERRADA'];
+  final List<String> _estatuses = ['TODAS', 'ABIERTA', 'EN_PROCESO', 'EN_REVISION', 'EN_DESARROLLO', 'EN_ESPERA', 'RESUELTA', 'CERRADA'];
   final List<String> _prioridades = ['TODAS', 'BAJA', 'MEDIA', 'ALTA', 'CRITICA'];
 
   @override
@@ -61,6 +61,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4), child: Row(children: [Text('${_incidencias.length} incidencias', style: const TextStyle(color: Colors.grey))])),
         Expanded(child: _loading ? const Center(child: CircularProgressIndicator()) : _incidencias.isEmpty ? const Center(child: Text('Sin incidencias.')) : RefreshIndicator(onRefresh: _cargar, child: ListView.builder(itemCount: _incidencias.length, itemBuilder: (ctx, i) => IncidenciaCard(incidencia: _incidencias[i], onTap: () async { await Navigator.pushNamed(ctx, AppRoutes.adminDetalleIncidencia, arguments: _incidencias[i].id); _cargar(); })))),
       ]),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final creada = await Navigator.pushNamed(context, AppRoutes.adminCrearIncidencia);
+          if (creada == true) _cargar();
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Nueva'),
+      ),
     );
   }
 }

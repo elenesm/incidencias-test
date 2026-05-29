@@ -95,6 +95,25 @@ class IncidenciaService {
     throw Exception(jsonDecode(res.body)['message'] ?? 'Error al cargar técnicos.');
   }
 
+  Future<void> agregarComentarioAdmin(int id, String mensaje) async {
+    final res = await _api.post('/admin/incidencias/$id/comentarios', {'mensaje': mensaje});
+    if (res.statusCode != 201) throw Exception(jsonDecode(res.body)['message'] ?? 'Error.');
+  }
+
+  Future<List<UsuarioRef>> getUsuarios() async {
+    final res = await _api.get('/admin/usuarios');
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return (data['usuarios'] as List).map((e) => UsuarioRef.fromJson(e)).toList();
+    }
+    throw Exception(jsonDecode(res.body)['message'] ?? 'Error al cargar usuarios.');
+  }
+
+  Future<void> crearIncidenciaAdmin(Map<String, dynamic> datos) async {
+    final res = await _api.post('/admin/incidencias', datos);
+    if (res.statusCode != 201) throw Exception(jsonDecode(res.body)['message'] ?? 'Error al crear.');
+  }
+
   Future<void> inactivar(int id) async {
     final res = await _api.delete('/admin/incidencias/$id');
     if (res.statusCode != 200) throw Exception(jsonDecode(res.body)['message'] ?? 'Error.');

@@ -3,7 +3,6 @@ import 'config/routes.dart';
 import 'config/app_config.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
-import 'models/usuario_model.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/usuario/usuario_home_screen.dart';
 import 'screens/usuario/nueva_incidencia_screen.dart';
@@ -13,6 +12,7 @@ import 'screens/tecnico/tecnico_detalle_screen.dart';
 import 'screens/admin/admin_home_screen.dart';
 import 'screens/admin/admin_detalle_screen.dart';
 import 'screens/admin/admin_reportes_screen.dart';
+import 'screens/admin/admin_crear_incidencia_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -114,6 +114,7 @@ class IncidenciasApp extends StatelessWidget {
       case AppRoutes.adminHome: return const AdminHomeScreen();
       case AppRoutes.adminDetalleIncidencia: return AdminDetalleScreen(incidenciaId: args as int);
       case AppRoutes.adminReportes: return const AdminReportesScreen();
+      case AppRoutes.adminCrearIncidencia: return const AdminCrearIncidenciaScreen();
       default: return const Scaffold(body: Center(child: Text('Ruta no encontrada.')));
     }
   }

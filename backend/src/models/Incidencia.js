@@ -8,7 +8,7 @@ const Incidencia = sequelize.define('Incidencia', {
   descripcion: { type: DataTypes.TEXT, allowNull: false },
   categoria: { type: DataTypes.STRING(80), allowNull: true },
   prioridad: { type: DataTypes.ENUM('BAJA','MEDIA','ALTA','CRITICA'), allowNull: true },
-  estatus: { type: DataTypes.ENUM('ABIERTA','EN_PROCESO','EN_ESPERA','RESUELTA','CERRADA'), allowNull: false, defaultValue: 'ABIERTA' },
+  estatus: { type: DataTypes.ENUM('ABIERTA','EN_PROCESO','EN_REVISION','EN_DESARROLLO','EN_ESPERA','RESUELTA','CERRADA'), allowNull: false, defaultValue: 'ABIERTA' },
   usuario_id: { type: DataTypes.INTEGER, allowNull: false },
   tecnico_id: { type: DataTypes.INTEGER, allowNull: true },
   activo: { type: DataTypes.BOOLEAN, defaultValue: true },

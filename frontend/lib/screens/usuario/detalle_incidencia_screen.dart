@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/incidencia_service.dart';
 import '../../models/incidencia_model.dart';
 import '../../widgets/estatus_chip.dart';
+import '../../widgets/chat_bubble.dart';
 
 class DetalleIncidenciaUsuarioScreen extends StatefulWidget {
   final int incidenciaId;
@@ -78,35 +79,39 @@ class _DetalleState extends State<DetalleIncidenciaUsuarioScreen> {
             ]),
           )),
           const SizedBox(height: 16),
-          const Text('Bitácora', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text('Conversación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 8),
           if (inc.logs == null || inc.logs!.isEmpty)
-            const Text('Sin registros en bitácora.', style: TextStyle(color: Colors.grey))
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('Sin mensajes aún.', style: TextStyle(color: Colors.grey))),
+            )
           else
-            ...inc.logs!.map((log) => Card(
-              color: Colors.blue.shade50,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person, size: 18), radius: 18),
-                title: Text(log.mensaje),
-                subtitle: Text(log.autor?.nombre ?? 'Sistema', style: const TextStyle(fontSize: 12)),
-                trailing: log.estatusNuevo != null ? EstatusChip(log.estatusNuevo!) : null,
+            ...inc.logs!.map((log) => ChatBubble(log: log, rolActual: 'USUARIO')),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _comentCtrl,
+                maxLines: null,
+                textInputAction: TextInputAction.newline,
+                decoration: InputDecoration(
+                  hintText: 'Escribe un mensaje...',
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
               ),
-            )),
-          const SizedBox(height: 16),
-          const Text('Agregar comentario', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _comentCtrl,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: 'Escribe tu comentario...',
-              border: const OutlineInputBorder(),
-              suffixIcon: _sending
-                  ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2))
-                  : IconButton(icon: const Icon(Icons.send), onPressed: _enviarComentario),
             ),
-          ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: _sending
+                  ? const Padding(padding: EdgeInsets.all(10), child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 20), onPressed: _enviarComentario),
+            ),
+          ]),
         ],
       ),
     );

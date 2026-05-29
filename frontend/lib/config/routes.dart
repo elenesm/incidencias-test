@@ -16,4 +16,5 @@ class AppRoutes {
   static const String adminHome = '/admin/home';
   static const String adminDetalleIncidencia = '/admin/incidencia-detalle';
   static const String adminReportes = '/admin/reportes';
+  static const String adminCrearIncidencia = '/admin/nueva-incidencia';
 }

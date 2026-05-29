@@ -143,4 +143,62 @@ const listarTecnicos = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { listarTodas, asignarTecnico, actualizarCampos, inactivarIncidencia, reportes, listarTecnicos };
+const listarUsuarios = async (req, res, next) => {
+  try {
+    const usuarios = await Usuario.findAll({
+      where: { rol: 'USUARIO' },
+      attributes: ['id', 'nombre', 'email'],
+      order: [['nombre', 'ASC']],
+    });
+    return res.json({ ok: true, usuarios });
+  } catch (err) { next(err); }
+};
+
+const crearIncidencia = async (req, res, next) => {
+  try {
+    const { titulo, descripcion, categoria, prioridad, usuario_id, tecnico_id } = req.body;
+
+    const usuario = await Usuario.findOne({ where: { id: usuario_id, rol: 'USUARIO' } });
+    if (!usuario) return res.status(404).json({ ok: false, message: 'Usuario no encontrado.' });
+
+    const incidencia = await Incidencia.create({
+      titulo, descripcion, categoria, prioridad,
+      usuario_id,
+      tecnico_id: tecnico_id || null,
+      estatus: tecnico_id ? 'EN_PROCESO' : 'ABIERTA',
+    });
+
+    if (tecnico_id) {
+      await Asignacion.create({ incidencia_id: incidencia.id, tecnico_id, asignado_por: req.user.id });
+    }
+
+    await IncidenciaLog.create({
+      incidencia_id: incidencia.id,
+      autor_id: req.user.id,
+      mensaje: tecnico_id
+        ? `Incidencia creada por supervisor y asignada al técnico.`
+        : `Incidencia creada por supervisor.`,
+      estatus_nuevo: incidencia.estatus,
+    });
+
+    return res.status(201).json({ ok: true, incidencia });
+  } catch (err) { next(err); }
+};
+
+const agregarComentario = async (req, res, next) => {
+  try {
+    const incidencia = await Incidencia.findOne({ where: { id: req.params.id, activo: true } });
+    if (!incidencia) return res.status(404).json({ ok: false, message: 'Incidencia no encontrada.' });
+    const log = await IncidenciaLog.create({
+      incidencia_id: incidencia.id,
+      autor_id: req.user.id,
+      mensaje: req.body.mensaje,
+    });
+    return res.status(201).json({ ok: true, log });
+  } catch (err) { next(err); }
+};
+
+module.exports = {
+  listarTodas, asignarTecnico, actualizarCampos, inactivarIncidencia,
+  reportes, listarTecnicos, listarUsuarios, crearIncidencia, agregarComentario,
+};

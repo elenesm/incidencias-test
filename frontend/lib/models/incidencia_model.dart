@@ -45,10 +45,11 @@ class UsuarioRef {
   final int id;
   final String nombre;
   final String? email;
+  final String? rol;
 
-  UsuarioRef({required this.id, required this.nombre, this.email});
+  UsuarioRef({required this.id, required this.nombre, this.email, this.rol});
   factory UsuarioRef.fromJson(Map<String, dynamic> json) =>
-      UsuarioRef(id: json['id'], nombre: json['nombre'], email: json['email']);
+      UsuarioRef(id: json['id'], nombre: json['nombre'], email: json['email'], rol: json['rol']);
 }
 
 class LogModel {

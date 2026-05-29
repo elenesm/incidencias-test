@@ -11,12 +11,14 @@ class AppColors {
 
 Color estatusColor(String estatus) {
   switch (estatus) {
-    case 'ABIERTA': return Colors.blue;
-    case 'EN_PROCESO': return Colors.orange;
-    case 'EN_ESPERA': return Colors.purple;
-    case 'RESUELTA': return Colors.green;
-    case 'CERRADA': return Colors.grey;
-    default: return Colors.blueGrey;
+    case 'ABIERTA':      return Colors.blue;
+    case 'EN_PROCESO':   return Colors.orange;
+    case 'EN_REVISION':  return Colors.indigo;
+    case 'EN_DESARROLLO':return const Color(0xFF00897B); // teal
+    case 'EN_ESPERA':    return Colors.purple;
+    case 'RESUELTA':     return Colors.green;
+    case 'CERRADA':      return Colors.grey;
+    default:             return Colors.blueGrey;
   }
 }
 
