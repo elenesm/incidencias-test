@@ -1,59 +1,289 @@
 {
   "info": {
     "name": "Gestión de Incidencias API",
+    "description": "Colección completa de endpoints para el sistema de gestión de incidencias.\n\nFlujo recomendado:\n1. Ejecutar 'Login Supervisor' y copiar el token a la variable {{token_supervisor}}\n2. Ejecutar 'Login Tecnico' y copiar a {{token_tecnico}}\n3. Ejecutar 'Login Usuario' y copiar a {{token_usuario}}\n4. Explorar los endpoints de cada rol.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:3000/api" },
-    { "key": "token_supervisor", "value": "" },
-    { "key": "token_tecnico", "value": "" },
-    { "key": "token_usuario", "value": "" }
+    { "key": "base_url",          "value": "http://localhost:3000/api", "type": "string" },
+    { "key": "token_supervisor",  "value": "", "type": "string" },
+    { "key": "token_tecnico",     "value": "", "type": "string" },
+    { "key": "token_usuario",     "value": "", "type": "string" }
   ],
   "item": [
+
     {
-      "name": "Auth",
+      "name": "🔐 Auth",
       "item": [
-        { "name": "Login Supervisor", "request": { "method": "POST", "url": "{{base_url}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"supervisor@test.com\",\"password\":\"Admin123!\"}" } } },
-        { "name": "Login Tecnico", "request": { "method": "POST", "url": "{{base_url}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"tecnico1@test.com\",\"password\":\"Tecnico123!\"}" } } },
-        { "name": "Login Usuario", "request": { "method": "POST", "url": "{{base_url}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"usuario1@test.com\",\"password\":\"Usuario123!\"}" } } }
+        {
+          "name": "Login Supervisor",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json(); if (r.token) pm.collectionVariables.set('token_supervisor', r.token);"], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST", "url": "{{base_url}}/auth/login",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"supervisor@test.com\",\n  \"password\": \"Admin123!\"\n}" }
+          }
+        },
+        {
+          "name": "Login Tecnico",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json(); if (r.token) pm.collectionVariables.set('token_tecnico', r.token);"], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST", "url": "{{base_url}}/auth/login",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"tecnico1@test.com\",\n  \"password\": \"Tecnico123!\"\n}" }
+          }
+        },
+        {
+          "name": "Login Usuario",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json(); if (r.token) pm.collectionVariables.set('token_usuario', r.token);"], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST", "url": "{{base_url}}/auth/login",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"usuario1@test.com\",\n  \"password\": \"Usuario123!\"\n}" }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/auth/logout",
+            "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}]
+          }
+        },
+        {
+          "name": "Sin token → 401",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/usuario/incidencias",
+            "header": []
+          }
+        },
+        {
+          "name": "Rol incorrecto → 403",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/admin/incidencias",
+            "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}]
+          }
+        }
       ]
     },
+
     {
-      "name": "Usuario",
+      "name": "👤 Usuario",
       "item": [
-        { "name": "Crear Incidencia", "request": { "method": "POST", "url": "{{base_url}}/usuario/incidencias", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_usuario}}"}], "body": { "mode": "raw", "raw": "{\"titulo\":\"Falla en sistema\",\"descripcion\":\"El sistema no responde\",\"categoria\":\"Software\",\"prioridad\":\"ALTA\"}" } } },
-        { "name": "Listar Mis Incidencias", "request": { "method": "GET", "url": "{{base_url}}/usuario/incidencias", "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}] } },
-        { "name": "Listar Filtradas por Estatus", "request": { "method": "GET", "url": { "raw": "{{base_url}}/usuario/incidencias?estatus=ABIERTA", "query": [{"key":"estatus","value":"ABIERTA"}] }, "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}] } },
-        { "name": "Detalle Incidencia", "request": { "method": "GET", "url": "{{base_url}}/usuario/incidencias/1", "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}] } },
-        { "name": "Agregar Comentario", "request": { "method": "POST", "url": "{{base_url}}/usuario/incidencias/1/comentarios", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_usuario}}"}], "body": { "mode": "raw", "raw": "{\"mensaje\":\"Sigue fallando después del reinicio.\"}" } } }
+        {
+          "name": "Crear Incidencia",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/usuario/incidencias",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_usuario}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Pantalla en blanco al exportar PDF\",\n  \"descripcion\": \"Al ir a Reportes > Exportar PDF la pantalla queda en blanco. Reproducible en Chrome 148 y Firefox 127. URL afectada: /reportes/export?format=pdf\",\n  \"categoria\": \"Software\",\n  \"prioridad\": \"ALTA\"\n}" }
+          }
+        },
+        {
+          "name": "Listar Mis Incidencias",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/usuario/incidencias",
+            "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}]
+          }
+        },
+        {
+          "name": "Filtrar por Estatus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/usuario/incidencias?estatus=ABIERTA", "query": [{"key":"estatus","value":"ABIERTA","description":"ABIERTA | EN_PROCESO | EN_REVISION | EN_DESARROLLO | EN_ESPERA | RESUELTA | CERRADA"}] },
+            "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}]
+          }
+        },
+        {
+          "name": "Detalle + Conversación",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/usuario/incidencias/1",
+            "header": [{"key":"Authorization","value":"Bearer {{token_usuario}}"}]
+          }
+        },
+        {
+          "name": "Agregar Mensaje al Chat",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/usuario/incidencias/1/comentarios",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_usuario}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"mensaje\": \"Confirmo el error. También falla en Firefox. Adjunto: la URL afectada es /reportes/export?format=pdf\"\n}" }
+          }
+        }
       ]
     },
+
     {
-      "name": "Técnico",
+      "name": "🔧 Técnico",
       "item": [
-        { "name": "Listar Asignadas", "request": { "method": "GET", "url": "{{base_url}}/tecnico/incidencias", "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}] } },
-        { "name": "Detalle Asignada", "request": { "method": "GET", "url": "{{base_url}}/tecnico/incidencias/1", "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}] } },
-        { "name": "Actualizar Estatus", "request": { "method": "PATCH", "url": "{{base_url}}/tecnico/incidencias/1", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}], "body": { "mode": "raw", "raw": "{\"estatus\":\"RESUELTA\",\"comentario\":\"Problema resuelto reinstalando el servicio.\"}" } } },
-        { "name": "Agregar Comentario Técnico", "request": { "method": "POST", "url": "{{base_url}}/tecnico/incidencias/1/comentarios", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}], "body": { "mode": "raw", "raw": "{\"mensaje\":\"Revisando logs del servidor.\"}" } } }
+        {
+          "name": "Listar Mis Asignaciones",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/tecnico/incidencias",
+            "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}]
+          }
+        },
+        {
+          "name": "Filtrar por Estatus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/tecnico/incidencias?estatus=EN_PROCESO", "query": [{"key":"estatus","value":"EN_PROCESO","description":"EN_PROCESO | EN_REVISION | EN_DESARROLLO | EN_ESPERA | RESUELTA"}] },
+            "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}]
+          }
+        },
+        {
+          "name": "Detalle + Conversación",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/tecnico/incidencias/1",
+            "header": [{"key":"Authorization","value":"Bearer {{token_tecnico}}"}]
+          }
+        },
+        {
+          "name": "Cambiar a EN_REVISION",
+          "request": {
+            "method": "PATCH", "url": "{{base_url}}/tecnico/incidencias/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"estatus\": \"EN_REVISION\",\n  \"comentario\": \"Revisando logs del servidor, encontré el módulo afectado.\"\n}" }
+          }
+        },
+        {
+          "name": "Cambiar a EN_DESARROLLO",
+          "request": {
+            "method": "PATCH", "url": "{{base_url}}/tecnico/incidencias/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"estatus\": \"EN_DESARROLLO\",\n  \"comentario\": \"Implementando el fix. Estimado: 2 horas.\"\n}" }
+          }
+        },
+        {
+          "name": "Resolver (RESUELTA)",
+          "request": {
+            "method": "PATCH", "url": "{{base_url}}/tecnico/incidencias/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"estatus\": \"RESUELTA\",\n  \"comentario\": \"Fix aplicado. Se reinstauló el servicio de exportación. Verificado en producción.\"\n}" }
+          }
+        },
+        {
+          "name": "Agregar Nota al Chat",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/tecnico/incidencias/1/comentarios",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_tecnico}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"mensaje\": \"Revisando logs del servidor. El error está en el módulo de exportación PDF, línea 247.\"\n}" }
+          }
+        }
       ]
     },
+
     {
-      "name": "Supervisor (Admin)",
+      "name": "👑 Supervisor",
       "item": [
-        { "name": "Listado Global", "request": { "method": "GET", "url": "{{base_url}}/admin/incidencias", "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
-        { "name": "Filtrar por Estatus y Prioridad", "request": { "method": "GET", "url": { "raw": "{{base_url}}/admin/incidencias?estatus=ABIERTA&prioridad=ALTA", "query": [{"key":"estatus","value":"ABIERTA"},{"key":"prioridad","value":"ALTA"}] }, "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
-        { "name": "Asignar Técnico", "request": { "method": "POST", "url": "{{base_url}}/admin/incidencias/2/asignar", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}], "body": { "mode": "raw", "raw": "{\"tecnico_id\":2}" } } },
-        { "name": "Actualizar Campos (PATCH)", "request": { "method": "PATCH", "url": "{{base_url}}/admin/incidencias/2", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}], "body": { "mode": "raw", "raw": "{\"prioridad\":\"CRITICA\",\"estatus\":\"EN_PROCESO\"}" } } },
-        { "name": "Inactivar (Soft Delete)", "request": { "method": "DELETE", "url": "{{base_url}}/admin/incidencias/5", "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
-        { "name": "Reportes Generales", "request": { "method": "GET", "url": "{{base_url}}/admin/reportes", "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } },
-        { "name": "Reportes por Rango de Fechas", "request": { "method": "GET", "url": { "raw": "{{base_url}}/admin/reportes?desde=2024-01-01&hasta=2024-12-31", "query": [{"key":"desde","value":"2024-01-01"},{"key":"hasta","value":"2024-12-31"}] }, "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}] } }
+        {
+          "name": "Tablero Global",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/admin/incidencias",
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Filtrar por Estatus y Prioridad",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/incidencias?estatus=EN_PROCESO&prioridad=CRITICA", "query": [{"key":"estatus","value":"EN_PROCESO"},{"key":"prioridad","value":"CRITICA"}] },
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Filtrar por Técnico y Fechas",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/incidencias?tecnico_id=2&desde=2026-01-01&hasta=2026-12-31", "query": [{"key":"tecnico_id","value":"2"},{"key":"desde","value":"2026-01-01"},{"key":"hasta","value":"2026-12-31"}] },
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Crear Incidencia (sin asignar)",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/admin/incidencias",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Caída de VPN corporativa zona norte\",\n  \"descripcion\": \"40 usuarios sin acceso desde las 14:00. Afecta edificio norte.\",\n  \"categoria\": \"Redes\",\n  \"prioridad\": \"CRITICA\",\n  \"usuario_id\": 4\n}" }
+          }
+        },
+        {
+          "name": "Crear Incidencia (con técnico asignado)",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/admin/incidencias",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Error crítico en servidor de producción\",\n  \"descripcion\": \"El servidor cayó a las 3am. Revisar logs de nginx y PM2.\",\n  \"categoria\": \"Infraestructura\",\n  \"prioridad\": \"CRITICA\",\n  \"usuario_id\": 4,\n  \"tecnico_id\": 2\n}" }
+          }
+        },
+        {
+          "name": "Listar Técnicos Disponibles",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/admin/tecnicos",
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/admin/usuarios",
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Asignar / Reasignar Técnico",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/admin/incidencias/2/asignar",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"tecnico_id\": 2\n}" }
+          }
+        },
+        {
+          "name": "Actualizar Campos (PATCH)",
+          "request": {
+            "method": "PATCH", "url": "{{base_url}}/admin/incidencias/2",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"prioridad\": \"CRITICA\",\n  \"estatus\": \"EN_PROCESO\",\n  \"categoria\": \"Infraestructura\"\n}" }
+          }
+        },
+        {
+          "name": "Agregar Nota al Chat",
+          "request": {
+            "method": "POST", "url": "{{base_url}}/admin/incidencias/2/comentarios",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token_supervisor}}"}],
+            "body": { "mode": "raw", "raw": "{\n  \"mensaje\": \"Prioridad máxima. Si no se resuelve en 2h, escalar con el proveedor.\"\n}" }
+          }
+        },
+        {
+          "name": "Inactivar (Soft Delete)",
+          "request": {
+            "method": "DELETE", "url": "{{base_url}}/admin/incidencias/5",
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Reportes Generales",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/admin/reportes",
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
+          "name": "Reportes por Rango de Fechas",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/admin/reportes?desde=2026-01-01&hasta=2026-12-31", "query": [{"key":"desde","value":"2026-01-01"},{"key":"hasta","value":"2026-12-31"}] },
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        }
       ]
     },
+
     {
-      "name": "Health Check",
+      "name": "⚙️ Utilidades",
       "item": [
-        { "name": "API Health", "request": { "method": "GET", "url": "{{base_url}}/health" } }
+        {
+          "name": "Health Check",
+          "request": { "method": "GET", "url": "{{base_url}}/health" }
+        }
       ]
     }
+
   ]
 }
