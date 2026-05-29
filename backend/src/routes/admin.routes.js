@@ -11,6 +11,7 @@ const router = Router();
 router.use(auth, role('SUPERVISOR'));
 
 router.get('/incidencias', ctrl.listarTodas);
+router.get('/incidencias/:id', [param('id').isInt(), validate], ctrl.detalleIncidencia);
 router.post(
   '/incidencias',
   [

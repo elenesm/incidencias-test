@@ -185,6 +185,23 @@ const crearIncidencia = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const detalleIncidencia = async (req, res, next) => {
+  try {
+    const incidencia = await Incidencia.findOne({
+      where: { id: req.params.id, activo: true },
+      include: [
+        { model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'email'] },
+        { model: Usuario, as: 'tecnico',  attributes: ['id', 'nombre', 'email'] },
+        { model: IncidenciaLog, as: 'logs',
+          include: [{ model: Usuario, as: 'autor', attributes: ['id', 'nombre', 'email', 'rol'] }],
+          order: [['created_at', 'ASC']] },
+      ],
+    });
+    if (!incidencia) return res.status(404).json({ ok: false, message: 'Incidencia no encontrada.' });
+    return res.json({ ok: true, incidencia });
+  } catch (err) { next(err); }
+};
+
 const agregarComentario = async (req, res, next) => {
   try {
     const incidencia = await Incidencia.findOne({ where: { id: req.params.id, activo: true } });
@@ -199,6 +216,7 @@ const agregarComentario = async (req, res, next) => {
 };
 
 module.exports = {
-  listarTodas, asignarTecnico, actualizarCampos, inactivarIncidencia,
-  reportes, listarTecnicos, listarUsuarios, crearIncidencia, agregarComentario,
+  listarTodas, detalleIncidencia, asignarTecnico, actualizarCampos,
+  inactivarIncidencia, reportes, listarTecnicos, listarUsuarios,
+  crearIncidencia, agregarComentario,
 };

@@ -30,15 +30,8 @@ class _AdminDetalleState extends State<AdminDetalleScreen> {
   Future<void> _cargar() async {
     setState(() => _loading = true);
     try {
-      final results = await Future.wait([
-        _service.getTodasIncidencias(),
-        _service.getTecnicos(),
-      ]);
-      final lista = results[0] as List<IncidenciaModel>;
-      final tecnicos = results[1] as List<UsuarioRef>;
-      // Recarga el detalle con logs incluidos
-      final inc = lista.firstWhere((i) => i.id == widget.incidenciaId);
-      // Fetch detalle completo con logs via admin patch (o reutilizamos lista)
+      final inc     = await _service.getDetalleAdmin(widget.incidenciaId);
+      final tecnicos = await _service.getTecnicos();
       setState(() {
         _inc = inc;
         _nuevoEstatus = inc.estatus;

@@ -18,7 +18,7 @@ class _TecnicoHomeScreenState extends State<TecnicoHomeScreen> {
   bool _loading = true;
   String? _error;
   String? _filtro;
-  final List<String> _estatuses = ['TODAS', 'EN_PROCESO', 'EN_ESPERA', 'RESUELTA'];
+  final List<String> _estatuses = ['TODAS', 'EN_PROCESO', 'EN_REVISION', 'EN_DESARROLLO', 'EN_ESPERA', 'RESUELTA'];
 
   @override
   void initState() { super.initState(); _cargar(); }

@@ -181,6 +181,13 @@
           }
         },
         {
+          "name": "Detalle Incidencia + Conversación",
+          "request": {
+            "method": "GET", "url": "{{base_url}}/admin/incidencias/1",
+            "header": [{"key":"Authorization","value":"Bearer {{token_supervisor}}"}]
+          }
+        },
+        {
           "name": "Filtrar por Estatus y Prioridad",
           "request": {
             "method": "GET",

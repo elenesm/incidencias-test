@@ -95,6 +95,12 @@ class IncidenciaService {
     throw Exception(jsonDecode(res.body)['message'] ?? 'Error al cargar técnicos.');
   }
 
+  Future<IncidenciaModel> getDetalleAdmin(int id) async {
+    final res = await _api.get('/admin/incidencias/$id');
+    if (res.statusCode == 200) return IncidenciaModel.fromJson(jsonDecode(res.body)['incidencia']);
+    throw Exception(jsonDecode(res.body)['message'] ?? 'Error.');
+  }
+
   Future<void> agregarComentarioAdmin(int id, String mensaje) async {
     final res = await _api.post('/admin/incidencias/$id/comentarios', {'mensaje': mensaje});
     if (res.statusCode != 201) throw Exception(jsonDecode(res.body)['message'] ?? 'Error.');
