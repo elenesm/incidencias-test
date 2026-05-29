@@ -264,13 +264,13 @@ Cada burbuja incluye nombre del autor, timestamp y — si aplica — el chip del
 
 ### Conexión a PostgreSQL (TablePlus u otro cliente)
 
-| Campo         | Valor              |
-|---------------|--------------------|
-| Host          | localhost          |
-| Puerto        | 5432               |
-| Base de datos | valor de `DB_NAME` |
-| Usuario       | valor de `DB_USER` |
-| Contraseña    | valor de `DB_PASSWORD` |
+| Campo         | Valor                        |
+|---------------|------------------------------|
+| Host          | localhost                    |
+| Puerto        | **5433** (Docker) / 5432 (local sin Docker) |
+| Base de datos | valor de `DB_NAME`           |
+| Usuario       | valor de `DB_USER`           |
+| Contraseña    | valor de `DB_PASSWORD`       |
 
 ---
 
