@@ -178,45 +178,77 @@ Authorization: Bearer <token>
 
 ### Auth
 
-| Método | Ruta              | Auth | Descripción              |
-|--------|-------------------|------|--------------------------|
-| POST   | /api/auth/login   | No   | Login — devuelve JWT     |
-| POST   | /api/auth/logout  | Sí   | Logout (invalida sesión) |
+| Método | Ruta             | Auth | Descripción          |
+|--------|------------------|------|----------------------|
+| POST   | /api/auth/login  | No   | Login — devuelve JWT |
+| POST   | /api/auth/logout | Sí   | Cerrar sesión        |
 
 ### Usuario (`rol: USUARIO`)
 
-| Método | Ruta                                      | Descripción                          |
-|--------|-------------------------------------------|--------------------------------------|
-| POST   | /api/usuario/incidencias                  | Crear incidencia                     |
-| GET    | /api/usuario/incidencias                  | Listar mis incidencias (`?estatus=`) |
-| GET    | /api/usuario/incidencias/:id              | Detalle + bitácora completa          |
-| POST   | /api/usuario/incidencias/:id/comentarios  | Agregar comentario                   |
+| Método | Ruta                                     | Descripción                          |
+|--------|------------------------------------------|--------------------------------------|
+| POST   | /api/usuario/incidencias                 | Crear incidencia                     |
+| GET    | /api/usuario/incidencias                 | Listar mis incidencias (`?estatus=`) |
+| GET    | /api/usuario/incidencias/:id             | Detalle + conversación completa      |
+| POST   | /api/usuario/incidencias/:id/comentarios | Agregar mensaje al chat              |
 
 ### Técnico (`rol: TECNICO`)
 
-| Método | Ruta                                      | Descripción                          |
-|--------|-------------------------------------------|--------------------------------------|
-| GET    | /api/tecnico/incidencias                  | Listar incidencias asignadas         |
-| GET    | /api/tecnico/incidencias/:id              | Detalle + bitácora                   |
-| PATCH  | /api/tecnico/incidencias/:id              | Actualizar estatus y/o comentario    |
-| POST   | /api/tecnico/incidencias/:id/comentarios  | Agregar nota técnica                 |
+| Método | Ruta                                     | Descripción                                         |
+|--------|------------------------------------------|-----------------------------------------------------|
+| GET    | /api/tecnico/incidencias                 | Listar incidencias asignadas                        |
+| GET    | /api/tecnico/incidencias/:id             | Detalle + conversación                              |
+| PATCH  | /api/tecnico/incidencias/:id             | Actualizar estatus (`EN_PROCESO` `EN_REVISION` `EN_DESARROLLO` `EN_ESPERA` `RESUELTA`) y/o comentario |
+| POST   | /api/tecnico/incidencias/:id/comentarios | Agregar nota técnica al chat                        |
 
 ### Supervisor (`rol: SUPERVISOR`)
 
-| Método | Ruta                                      | Descripción                                          |
-|--------|-------------------------------------------|------------------------------------------------------|
+| Método | Ruta                                      | Descripción                                                              |
+|--------|-------------------------------------------|--------------------------------------------------------------------------|
 | GET    | /api/admin/incidencias                    | Tablero global (`?estatus` `?prioridad` `?tecnico_id` `?desde` `?hasta`) |
-| POST   | /api/admin/incidencias/:id/asignar        | Asignar / reasignar técnico                          |
-| PATCH  | /api/admin/incidencias/:id                | Actualizar campos (prioridad, estatus, etc.)         |
-| DELETE | /api/admin/incidencias/:id                | Inactivar incidencia (soft delete)                   |
-| GET    | /api/admin/reportes                       | Métricas por estatus, prioridad y técnico            |
-| GET    | /api/admin/tecnicos                       | Listar técnicos disponibles para asignación          |
+| POST   | /api/admin/incidencias                    | Crear incidencia y asignar técnico en un paso                            |
+| POST   | /api/admin/incidencias/:id/asignar        | Reasignar técnico a incidencia existente                                 |
+| PATCH  | /api/admin/incidencias/:id                | Actualizar campos (prioridad, estatus, categoría, etc.)                  |
+| DELETE | /api/admin/incidencias/:id                | Inactivar incidencia (soft delete — dato preservado en DB)               |
+| POST   | /api/admin/incidencias/:id/comentarios    | Agregar nota supervisora al chat                                         |
+| GET    | /api/admin/reportes                       | Métricas por estatus, prioridad y técnico (`?desde` `?hasta`)            |
+| GET    | /api/admin/tecnicos                       | Listar usuarios con rol TECNICO                                          |
+| GET    | /api/admin/usuarios                       | Listar usuarios con rol USUARIO                                          |
 
 ### Utilitario
 
-| Método | Ruta        | Descripción       |
-|--------|-------------|-------------------|
-| GET    | /api/health | Estado de la API  |
+| Método | Ruta        | Descripción      |
+|--------|-------------|------------------|
+| GET    | /api/health | Estado de la API |
+
+---
+
+## Estatus de incidencias
+
+| Estatus          | Color    | Quién puede asignarlo              |
+|------------------|----------|------------------------------------|
+| `ABIERTA`        | Azul     | Se asigna al crear                 |
+| `EN_PROCESO`     | Naranja  | Técnico / Supervisor               |
+| `EN_REVISION`    | Índigo   | Técnico                            |
+| `EN_DESARROLLO`  | Teal     | Técnico                            |
+| `EN_ESPERA`      | Morado   | Técnico / Supervisor               |
+| `RESUELTA`       | Verde    | Técnico (registra `fecha_cierre`)  |
+| `CERRADA`        | Gris     | Supervisor                         |
+
+---
+
+## Chat / Conversación (bitácora)
+
+Cada incidencia tiene una **conversación** visible en el detalle para los 3 roles. Las burbujas se colorean según quién escribió:
+
+| Rol        | Color de burbuja | Alineación |
+|------------|------------------|------------|
+| USUARIO    | Azul claro       | Izquierda  |
+| TECNICO    | Verde claro      | Derecha    |
+| SUPERVISOR | Naranja claro    | Izquierda  |
+| Sistema    | Gris centrado    | Centro     |
+
+Cada burbuja incluye nombre del autor, timestamp y — si aplica — el chip del cambio de estatus.
 
 ---
 
@@ -227,19 +259,18 @@ Authorization: Bearer <token>
 - El `docker-compose.yml` no tiene valores hardcodeados — requiere el `.env` en la raíz.
 - JWT validado en cada request a rutas protegidas mediante middleware.
 - Control de roles: cada módulo (`/usuario`, `/tecnico`, `/admin`) valida el rol del token.
-- Respuestas 401 en Flutter disparan logout automático y redirigen a Login.
+- Respuestas `401` en Flutter disparan logout automático y redirigen a Login.
+- Soft delete: `DELETE` solo marca `activo = false`, los datos y logs se preservan en la DB.
 
 ### Conexión a PostgreSQL (TablePlus u otro cliente)
 
-Usar los valores del archivo `.env` que configuraste:
-
-| Campo         | Valor del `.env`   |
+| Campo         | Valor              |
 |---------------|--------------------|
 | Host          | localhost          |
 | Puerto        | 5432               |
-| Base de datos | `DB_NAME`          |
-| Usuario       | `DB_USER`          |
-| Contraseña    | `DB_PASSWORD`      |
+| Base de datos | valor de `DB_NAME` |
+| Usuario       | valor de `DB_USER` |
+| Contraseña    | valor de `DB_PASSWORD` |
 
 ---
 
@@ -249,13 +280,13 @@ Usar los valores del archivo `.env` que configuraste:
 incidencias-test/
 ├── backend/
 │   ├── src/
-│   │   ├── config/        # database.js (Sequelize config + seederStorage)
+│   │   ├── config/        # database.js (Sequelize + seederStorage)
 │   │   ├── models/        # Usuario, Incidencia, IncidenciaLog, Asignacion
 │   │   ├── controllers/   # Lógica de negocio separada por rol
 │   │   ├── routes/        # Endpoints + validaciones (express-validator)
 │   │   ├── middlewares/   # auth (JWT), role (RBAC), validate, error
-│   │   ├── migrations/    # Esquema de base de datos versionado
-│   │   └── seeders/       # Datos iniciales (5 usuarios, 5 incidencias, logs)
+│   │   ├── migrations/    # 5 migraciones (esquema + ENUM de estatus)
+│   │   └── seeders/       # 1 supervisor, 2 técnicos, 2 usuarios, 5 incidencias, logs
 │   ├── .eslintrc.json
 │   ├── .prettierrc
 │   ├── Dockerfile
@@ -264,9 +295,13 @@ incidencias-test/
 │   └── lib/
 │       ├── config/        # app_config.dart (ENABLE_ROUTE_GUARDS, BASE_URL), routes.dart
 │       ├── models/        # IncidenciaModel, UsuarioModel, LogModel, UsuarioRef
-│       ├── services/      # AuthService, ApiService (401 interceptor), IncidenciaService
-│       ├── screens/       # auth/ usuario/ tecnico/ admin/
-│       ├── widgets/       # EstatusChip, PrioridadChip, LoadingButton
+│       ├── services/      # AuthService, ApiService (interceptor 401), IncidenciaService
+│       ├── screens/
+│       │   ├── auth/      # LoginScreen
+│       │   ├── usuario/   # Home, NuevaIncidencia, Detalle
+│       │   ├── tecnico/   # Home, Detalle
+│       │   └── admin/     # Home, Detalle, Crear, Reportes
+│       ├── widgets/       # EstatusChip, PrioridadChip, LoadingButton, ChatBubble
 │       └── main.dart      # onGenerateRoute, guards, navigatorKey global
 ├── docker-compose.yml
 ├── postman_collection.json
@@ -275,15 +310,15 @@ incidencias-test/
 
 ### Stack
 
-| Capa       | Tecnología                                  |
-|------------|---------------------------------------------|
-| Runtime    | Node.js 18 LTS                              |
-| Framework  | Express 4                                   |
-| Base datos | PostgreSQL 15                               |
-| ORM        | Sequelize 6 (migraciones + seeders)         |
-| Auth       | JWT (jsonwebtoken) + bcryptjs               |
-| Seguridad  | helmet, cors, express-validator             |
-| Mobile/Web | Flutter 3 + Dart 3                          |
-| HTTP       | package:http                                |
-| Sesión     | shared_preferences (JWT local)              |
-| DevOps     | Docker + Docker Compose                     |
+| Capa       | Tecnología                              |
+|------------|-----------------------------------------|
+| Runtime    | Node.js 18 LTS                          |
+| Framework  | Express 4                               |
+| Base datos | PostgreSQL 15                           |
+| ORM        | Sequelize 6 (migraciones + seeders)     |
+| Auth       | JWT (jsonwebtoken) + bcryptjs           |
+| Seguridad  | helmet, cors, express-validator         |
+| Mobile/Web | Flutter 3.44 + Dart 3                   |
+| HTTP       | package:http                            |
+| Sesión     | shared_preferences (JWT local)          |
+| DevOps     | Docker + Docker Compose                 |
